@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -e
+
+sudo apt update && sudo apt --yes upgrade
+
+if ! [ -x "$(command -v ansible)" ]; then
+  sudo apt --yes install ansible 
+fi
+

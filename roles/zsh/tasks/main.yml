@@ -1,0 +1,79 @@
+- name: Install zsh
+  apt: name=zsh state=present
+  become: yes
+  become_user: root
+  become_method: sudo
+
+- name: Change login shell for current user
+  become: yes 
+  command: sh -c "chsh -s /bin/zsh {{ user }}"
+
+- name: Check for oh-my-zsh installation
+  stat: "path=~/.oh-my-zsh"
+  register: oh_my_zsh_stat
+
+- name: Install oh-my-zsh
+  raw: "sh -c \"$(curl -fsSL https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh)\" \"\" --unattended"
+  when: not oh_my_zsh_stat.stat.exists
+
+- name: Check for .zshrc
+  stat: path="~/.zshrc"
+  register: zshrc_stat
+
+- name: Back up .zshrc
+  command: mv ~/.zshrc ~/.zshrc.bak
+  args:
+    creates: ~/.zshrc.bak
+  when: zshrc_stat.stat.exists
+
+- name: Remove .zshrc
+  command: rm ~/.zshrc
+  when: zshrc_stat.stat.exists
+
+- name: Link zshrc dotfile
+  file:
+    src: "{{ dotfiles_home }}/roles/zsh/files/zshrc"
+    dest: ~/.zshrc
+    state: link
+
+- name: Link zprofile dotfile
+  file:
+    src: "{{ dotfiles_home }}/roles/zsh/files/zprofile"
+    dest: ~/.zprofile
+    state: link
+
+- name: Check for powerlevel10k installation
+  stat: "path={{ dotfiles_user_home }}/.oh-my-zsh/custom/themes/powerlevel10k"
+  register: p10k_stat
+
+- name: Install powerlevel10k
+  git:
+    repo: https://github.com/romkatv/powerlevel10k.git
+    dest: "{{ dotfiles_user_home }}/.oh-my-zsh/custom/themes/powerlevel10k"
+    depth: 1
+  when: not p10k_stat.stat.exists
+
+- name: Check for .p10k.zsh
+  stat: path="~/.p10k.zsh"
+  register: p10k_dotfile_stat
+
+- name: Back up .p10k.zsh
+  command: mv ~/.p10k.zsh ~/.p10k.zsh.bak
+  args:
+    creates: ~/.p10k.zsh
+  when: p10k_dotfile_stat.stat.exists
+
+- name: Remove .p10k.zsh
+  command: rm ~/.p10k.zsh
+  when: p10k_dotfile_stat.stat.exists
+
+- name: Link p10k dotfile
+  file:
+    src: "{{ dotfiles_home }}/roles/zsh/files/p10k.zsh"
+    dest: "{{ dotfiles_user_home }}/.p10k.zsh"
+    state: link
+
+- name: Install zsh autosuggestions plugin
+  git:
+    repo: https://github.com/zsh-users/zsh-autosuggestions
+    dest: "{{ dotfiles_user_home }}/.oh-my-zsh/custom/plugins/zsh-autosuggestions"

@@ -1,0 +1,9 @@
+- name: My playbook
+  hosts: all
+  vars:
+    user: sm
+
+  roles:
+    - zsh
+    - tmux
+    - python
